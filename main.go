@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net"
 	"net/http"
 	"strconv"
@@ -38,6 +39,10 @@ var MINER_BANNER = "Ministo"
 var MINER_VERSION = "0.1"
 
 func main() {
+
+	//
+
+	single_miner_id := rand.Intn(2811)
 
 	//
 
@@ -142,7 +147,7 @@ func main() {
 
 				//
 
-				_, err = conn.Write([]byte(fmt.Sprintf("%v,%v,%v %v,%v", result, hashrate, MINER_BANNER, MINER_VERSION, RIG_IDENTIFIER)))
+				_, err = conn.Write([]byte(fmt.Sprintf("%v,%v,%v %v,%v,,%v", result, hashrate, MINER_BANNER, MINER_VERSION, RIG_IDENTIFIER, single_miner_id)))
 
 				if err != nil {
 					log.Fatal("Error sending then job")
