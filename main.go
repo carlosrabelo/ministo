@@ -30,7 +30,7 @@ type Response struct {
 }
 
 var USERNAME = "solracolebar"
-var DIFFICULTY = "LOW"
+var DIFFICULTY = ""
 var MINING_KEY = "None"
 var RIG_IDENTIFIER = "pc"
 
@@ -171,11 +171,15 @@ func main() {
 
 					break
 
-				}
-
-				if feedback == "BAD" {
+				} else if feedback == "BAD" {
 
 					log.Printf("Rejected share %v Hashrate %v kH/s Difficulty %v", result, khashrate, diff)
+
+					break
+
+				} else {
+
+					log.Fatal(fmt.Sprintf("Feedback: %v", feedback))
 
 					break
 
