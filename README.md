@@ -6,6 +6,13 @@ Despite being fully functional, I wrote this duino-coin miner just for the purpo
 
 What is "Ministo"? It is an Esperanto word that means miner.
 
+## TODO:
+
+* Intensity
+* Threads
+* Flags options
+* Config file
+
 <hr>
 
 ## Buy me a Coffee
