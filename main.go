@@ -13,11 +13,13 @@ import (
 	"io/ioutil"
 	"log"
 	"math/rand"
-	"net"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
+
+	"golang.org/x/net/proxy"
 )
 
 type Response struct {
@@ -64,7 +66,23 @@ func main() {
 
 	//
 
-	conn, _ := net.Dial("tcp", result.Ip+":"+fmt.Sprint(result.Port))
+	u, err := url.Parse("socks5://localhost:9050")
+
+	if nil != err {
+		log.Fatalf("Parse: %v", err)
+	}
+
+	//
+
+	d, err := proxy.FromURL(u, proxy.Direct)
+
+	if nil != err {
+		log.Fatalf("Proxy: %v", err)
+	}
+
+	//
+
+	conn, _ := d.Dial("tcp", result.Ip+":"+fmt.Sprint(result.Port))
 
 	defer conn.Close()
 
