@@ -59,4 +59,4 @@ go.work
 bin/
 
 # Binary
-ministo
+/ministo
