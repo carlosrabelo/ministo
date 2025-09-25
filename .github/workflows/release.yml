@@ -12,16 +12,8 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        goos: [linux, windows, darwin]
-        goarch: [amd64, arm64]
-        exclude:
-          - goos: windows
-            goarch: arm64
-
     steps:
     - uses: actions/checkout@v4
 
@@ -33,51 +25,36 @@ jobs:
     - name: Get dependencies
       run: go mod download
 
-    - name: Build binary
-      env:
-        GOOS: ${{ matrix.goos }}
-        GOARCH: ${{ matrix.goarch }}
+    - name: Build all platforms
       run: |
         mkdir -p dist
-        EXT=""
-        if [ "$GOOS" = "windows" ]; then
-          EXT=".exe"
-        fi
-        BINARY_NAME="ministo-$GOOS-$GOARCH$EXT"
-        go build -ldflags="-s -w" -o "dist/$BINARY_NAME" ./cmd/ministo
 
-        # Create archive
-        cd dist
-        if [ "$GOOS" = "windows" ]; then
-          zip "../ministo-$GOOS-$GOARCH.zip" "$BINARY_NAME"
-        else
-          tar -czf "../ministo-$GOOS-$GOARCH.tar.gz" "$BINARY_NAME"
-        fi
-        cd ..
+        # Build for each platform
+        platforms="linux/amd64 linux/arm64 windows/amd64 darwin/amd64 darwin/arm64"
 
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: ministo-${{ matrix.goos }}-${{ matrix.goarch }}
-        path: |
-          *.zip
-          *.tar.gz
+        for platform in $platforms; do
+          GOOS=$(echo $platform | cut -d'/' -f1)
+          GOARCH=$(echo $platform | cut -d'/' -f2)
 
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
+          EXT=""
+          if [ "$GOOS" = "windows" ]; then
+            EXT=".exe"
+          fi
 
-    - name: Download all artifacts
-      uses: actions/download-artifact@v4
-      with:
-        path: ./artifacts
+          BINARY_NAME="ministo-$GOOS-$GOARCH$EXT"
+          echo "Building $BINARY_NAME..."
 
-    - name: Flatten artifacts
-      run: |
-        find ./artifacts -name "*.zip" -o -name "*.tar.gz" | xargs -I {} mv {} ./artifacts/
-        find ./artifacts -mindepth 1 -maxdepth 1 -type d -exec rm -rf {} \;
+          GOOS=$GOOS GOARCH=$GOARCH go build -ldflags="-s -w" -o "dist/$BINARY_NAME" ./cmd/ministo
+
+          # Create archive
+          cd dist
+          if [ "$GOOS" = "windows" ]; then
+            zip "../ministo-$GOOS-$GOARCH.zip" "$BINARY_NAME"
+          else
+            tar -czf "../ministo-$GOOS-$GOARCH.tar.gz" "$BINARY_NAME"
+          fi
+          cd ..
+        done
 
     - name: Create Release
       uses: softprops/action-gh-release@v1
@@ -87,6 +64,8 @@ jobs:
         draft: false
         prerelease: false
         generate_release_notes: true
-        files: ./artifacts/*
+        files: |
+          *.zip
+          *.tar.gz
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
